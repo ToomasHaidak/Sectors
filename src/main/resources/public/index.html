@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body onload="getSectorsList()">
+Please enter your name and pick the Sectors you are currently involved in. </br>
+</br>
+
+Name:
+<input type = "text" id="nameInput"> </br>
+</br>
+
+Sectors:
+<select multiple size="5" id="sectorsList"></select> </br>
+</br>
+
+<input type="checkbox" id="agreeToTermsCheckbox"> Agree to terms</br>
+</br>
+
+<button id="saveButton">Save</button></br>
+</br>
+
+<script>
+
+    function getSectorsList() {
+        let sectorList = document.getElementById("sectorsList");
+        fetch("/getSectorsList")
+            .then(result => result.json())
+            .then(function(data){
+                for(var i = (data.length-1); i > -1; i--){
+                    var option = document.createElement("OPTION");
+                    txt = document.createTextNode(data[i].sectorName);
+                    option.appendChild(txt);
+                    option.style.paddingLeft = data[i].indent;
+                    sectorList.insertBefore(option, sectorList.firstChild);
+                }
+            })
+    }
+
+    let saveButton = document.getElementById("saveButton");
+    let nameInput = document.getElementById("nameInput");
+    let sectorList = document.getElementById("sectorsList");
+    let agreeToTermCheckbox = document.getElementById("agreeToTermsCheckbox")
+
+    saveButton.onclick = function () {
+        if(!agreeToTermCheckbox.checked) {
+            alert("You must agree to terms")
+        } else if (!nameInput.value) {
+            alert("You must enter a name")
+        } else if (!sectorList.value){
+            alert("You must choose one or multiple sectors")
+        } else {
+            let result = createSelectedData();
+            sendData(result);
+            alert("Database has been updated");
+        }
+    }
+
+    function createSelectedData (){
+        var result = [];
+        var options = sectorList && sectorList.options;
+        var opt;
+        result.push(nameInput.value);
+        for ( var i = 0; i < options.length; i++){
+            opt = options[i];
+            if(opt.selected) {
+                result.push(opt.value || opt.text);
+            }
+        }
+        return result;
+    }
+
+    function sendData(result){
+        fetch("/insert",
+            {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(result)
+            }
+        )
+    }
+
+</script>
+</body>
+</html>
